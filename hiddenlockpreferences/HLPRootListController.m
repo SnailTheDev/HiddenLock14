@@ -113,7 +113,15 @@
 }
 
 - (void)resetPassword:(id)sender {
-	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)@"com.yan.hiddenlock14/resetPassword", nil, nil, true);
+	UIAlertController *rstPwAlert = [UIAlertController alertControllerWithTitle:@"Reset password" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+	UIAlertAction *rstPwAction = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+		CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)@"com.yan.hiddenlock14/resetPassword", nil, nil, true);
+	}];
+	UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style: UIAlertActionStyleCancel handler:^(UIAlertAction * action {}];
+	[rstPwAlert addAction:rstPwAction];
+	// declare rootVC / self?
+        [rootVC presentViewController:rstPwAlert animated:YES completion:nil];
+														   
 }
 @end
 
