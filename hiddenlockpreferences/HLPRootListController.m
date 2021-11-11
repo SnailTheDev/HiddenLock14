@@ -2,6 +2,8 @@
 #include "HLPRootListController.h"
 #import "spawn.h"
 
+OBWelcomeController *welcomeController;
+
 @implementation HLPRootListController
 
 - (instancetype)init {
@@ -9,6 +11,8 @@
 
 	if (self) {
 		HBAppearanceSettings *appearanceSettings = [[HBAppearanceSettings alloc] init];
+
+		self.preferences = [[HBPreferences alloc] initWithIdentifier:@"com.yan.hiddenlockpreferences"];
 
 		self.applyButton = [[UIBarButtonItem alloc] initWithTitle:@"Apply" style: UIBarButtonItemStylePlain target: self action: @selector(applySettings)];
 		self.applyButton.tintColor = [UIColor whiteColor];
@@ -63,6 +67,40 @@
 	return self;
 }
 
+- (void)viewDidLoad {
+	[super viewDidLoad];
+
+	if (![[self preferences] objectForKey:@"didPresentWC"]) {
+		[self setupWelcomeController];
+	}
+}
+
+- (void)setupWelcomeController {
+	welcomeController = [[OBWelcomeController alloc] initWithTitle:@"HiddenLock14" detailText:@"Add Face ID authentication to hidden album in Photos." icon:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/icon.png"]];
+
+	[welcomeController addBulletedListItemWithTitle:@"FaceID" description:@"Lock the hidden section with an additional layer of security" image:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/face-id.png"]];
+	[welcomeController addBulletedListItemWithTitle:@"Item Count" description:@"Set the item count to any number you want!" image:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/icon@2x.png"]];
+	[welcomeController.buttonTray addCaptionText:@"yandevelop"];
+
+	OBBoldTrayButton* continueButton = [OBBoldTrayButton buttonWithType:1];
+    [continueButton addTarget:self action:@selector(dismissWelcomeController) forControlEvents:UIControlEventTouchUpInside];
+    [continueButton setTitle:@"Experience it yourself!" forState:UIControlStateNormal];
+    [continueButton setClipsToBounds:YES];
+    [continueButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [continueButton.layer setCornerRadius:10];
+	continueButton.tintColor = [UIColor colorWithRed:0.34 green:0.83 blue:0.96 alpha:1.0];
+    [welcomeController.buttonTray addButton:continueButton];
+
+    welcomeController.modalPresentationStyle = UIModalPresentationPageSheet;
+    welcomeController.view.tintColor = [UIColor blackColor];//[UIColor colorWithRed:0.60 green:0.75 blue:0.85 alpha:1.0];
+    [self presentViewController:welcomeController animated:YES completion:nil];
+}
+
+- (void)dismissWelcomeController {
+	[[self preferences] setBool:YES forKey:@"didPresentWC"];
+	[welcomeController dismissViewControllerAnimated:YES completion:nil];
+}
+
 
 - (NSArray *)specifiers {
 	if (!_specifiers) {
@@ -113,15 +151,14 @@
 }
 
 - (void)resetPassword:(id)sender {
-	UIAlertController *rstPwAlert = [UIAlertController alertControllerWithTitle:@"Reset password" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+	UIAlertController *rstPwAlert = [UIAlertController alertControllerWithTitle:@"Reset password" message:@"Are you sure you want to reset your password?" preferredStyle:UIAlertControllerStyleAlert];
+	UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style: UIAlertActionStyleCancel handler:^(UIAlertAction * action) {}];
 	UIAlertAction *rstPwAction = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-		CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)@"com.yan.hiddenlock14/resetPassword", nil, nil, true);
+			CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)@"com.yan.hiddenlockpreferences/resetPassword", nil, nil, true);
 	}];
-	UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style: UIAlertActionStyleCancel handler:^(UIAlertAction * action {}];
 	[rstPwAlert addAction:rstPwAction];
-	// declare rootVC / self?
-        [rootVC presentViewController:rstPwAlert animated:YES completion:nil];
-														   
+	[rstPwAlert addAction:cancel];
+    [self presentViewController:rstPwAlert animated:YES completion:nil];
 }
 @end
 

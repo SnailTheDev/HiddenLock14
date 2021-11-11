@@ -1,9 +1,9 @@
-TARGET := iphone:clang:14.8:13.0
+TARGET := iphone:clang:14.4:13.0
 INSTALL_TARGET_PROCESSES = MobileSlideShow
 ARCHS = arm64 arm64e
 THEOS_DEVICE_IP = localhost
 THEOS_DEVICE_PORT = 2222
-VERSION = 1.1
+DEBUG = 1
 
 include $(THEOS)/makefiles/common.mk
 

@@ -1,27 +1,53 @@
-#import <Foundation/Foundation.h>
-#include <UIKit/UIKit.h>
-#import <LocalAuthentication/LocalAuthentication.h>
-#include <spawn.h>
-#include <signal.h>
 #import "Tweak.h"
-#import <Cephei/HBPreferences.h>
-#import "lib/UICKeyChainStore.m"
 
 // Thanks to CydaiDEV, Hearse
 
+
 HBPreferences *preferences;
 
-#define rootVC UIApplication.sharedApplication.keyWindow.rootViewController
+LAPolicy policy = LAPolicyDeviceOwnerAuthentication;
+NSString *reason = @"Use your passcode to view and manage hidden album.";
 
 BOOL enabled;
 BOOL itemCountEnabled;
 BOOL passwordAuthEnabled;
 BOOL isAuthenticated;
 BOOL authOnAppStart;
-BOOL accessed = nil;
 BOOL popToEnabled;
+static BOOL accessed = nil;
+static BOOL numeric;
+static BOOL userDidLogin;
+static BOOL didPresentWC;
 
 double itemCount = 0;
+
+/* iPad
+%group iPad
+%hook PUSidebarViewController
+-(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+	NSLog(@"Tapped!");
+	if (indexPath.row == 9) {
+		NSLog(@"Tapped indexPath:%ld", indexPath.row);
+		LAContext *context = [[LAContext alloc] init];
+		NSError *authError = nil;
+		if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&authError]) {
+			[context evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:NSLocalizedString(@"Use your passcode to view and manage hidden album.", nil) reply:^(BOOL success, NSError *error) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+				if (success) {
+					%orig;
+				} else {
+					
+				}
+				});
+			}];
+		}
+	} else {
+		%orig;
+	}
+}
+%end
+%end
+*/
 
 %group HiddenLock14
 %hook PXNavigationListItem
@@ -36,6 +62,7 @@ double itemCount = 0;
 
 %hook PXNavigationListGadget
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+	NSLog(@"Value for userDidLogin: %d", userDidLogin);
 	//NSLog(@"Section: %ld, Row:%ld, Item:%ld, Desc:%@", indexPath.section, indexPath.row, indexPath.item, indexPath.description);
 	if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
 		NSString *cellLabel = [[[tableView cellForRowAtIndexPath: indexPath] textLabel] text];
@@ -43,35 +70,41 @@ double itemCount = 0;
 			NSLog(@"%@", cellLabel);
 		    LAContext *context = [[LAContext alloc] init];
 		    NSError *authError = nil;
-		    if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&authError]) {
-			    [context evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:NSLocalizedString(@"Use your passcode to view and manage hidden album.", nil) reply:^(BOOL success, NSError *error) {
+		    if ([context canEvaluatePolicy:policy error:&authError]) {
+			    [context evaluatePolicy:policy localizedReason:reason reply:^(BOOL success, NSError *error) {
 				    dispatch_async(dispatch_get_main_queue(), ^{
 					    if (success) {
 							accessed = YES;
 						    %orig;
 					    } else {
-							switch (error.code) {
-								case LAErrorPasscodeNotSet: {
-									NSLog(@"Passcode Not Set");
-									UIAlertController *noPw = [UIAlertController alertControllerWithTitle:@"No passcode set!" message:@"You have not set a Authentication method.\n Please proceed setting a password." preferredStyle:UIAlertControllerStyleAlert];
-									UIAlertAction *cncl = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {}];
-									[noPw addAction:cncl];
-									[rootVC presentViewController:noPw animated:YES completion:nil];
+							dispatch_async(dispatch_get_main_queue(), ^{
+								switch(error.code) {
+									case LAErrorUserFallback:
+										NSLog(@"UserFallBack!");
 									break;
-								}
-								case LAErrorBiometryNotAvailable: {
-									NSLog(@"BiometryNotAvailable");
+									
+									case LAErrorPasscodeNotSet:
+										NSLog(@"PasscodeNotSet");
 									break;
-								}
 
-							}
+									case LAErrorAuthenticationFailed:
+										NSLog(@"Authentication failed!");
+									break;
+									
+									case LAErrorUserCancel:
+										NSLog(@"User did cancel!");
+									break;
+								}
+							});
+
 						    [tableView deselectRowAtIndexPath:indexPath animated:YES];
 					    }
 				    });
 			    }];
 		    } else {
+			UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
 			UICKeyChainStore *keychain = [UICKeyChainStore keyChainStoreWithService:@"com.apple.mobileslideshow"];
-				if(![[NSUserDefaults standardUserDefaults] boolForKey:@"userDidLogin"] && ![keychain stringForKey:@"hlpassword"]) {
+				if(![preferences objectForKey:@"userDidLogin"] || ![keychain stringForKey:@"hlpassword"]) {
 					UIAlertController *authFailed = [UIAlertController alertControllerWithTitle:@"Authentication failed" message:@"You have not set a proper Authentication method.\n Please proceed setting a password." preferredStyle:UIAlertControllerStyleAlert];
 					UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {}];
 					UIAlertAction *authenticateAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
@@ -88,7 +121,7 @@ double itemCount = 0;
 							if ([password isEqualToString:passwordDouble]) {
 								;
                             	[keychain setString:password forKey:@"hlpassword"];
-								[[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"userDidLogin"];
+								[preferences setBool:YES forKey:@"userDidLogin"];
 								%orig;
 							} else {
 								UIAlertController *pwMatch = [UIAlertController alertControllerWithTitle:@"Passwords do not match" message:@"Please make sure the passwords you enter match." preferredStyle:UIAlertControllerStyleAlert];
@@ -103,12 +136,20 @@ double itemCount = 0;
 					[authFailed addTextFieldWithConfigurationHandler:^(UITextField *textField) {
 						textField.placeholder = @"Enter a password";
 						textField.secureTextEntry = YES;
-						textField.keyboardType = UIKeyboardTypeDefault;
+						if (numeric) {
+							textField.keyboardType = UIKeyboardTypeNumberPad;
+						} else {
+							textField.keyboardType = UIKeyboardTypeDefault;
+						}
 					}];
 					[authFailed addTextFieldWithConfigurationHandler:^(UITextField *textField1) {
 						textField1.placeholder = @"Confirm your password";
 						textField1.secureTextEntry = YES;
-						textField1.keyboardType = UIKeyboardTypeDefault;
+						if (numeric) {
+							textField1.keyboardType = UIKeyboardTypeNumberPad;
+						} else {
+							textField1.keyboardType = UIKeyboardTypeDefault;
+						}
 					}];
 					[authFailed addAction:cancel];
 					[authFailed addAction:authenticateAction];
@@ -140,7 +181,20 @@ double itemCount = 0;
 					[pwAuth addTextFieldWithConfigurationHandler:^(UITextField *textField) {
 						textField.placeholder = @"Password";
 						textField.secureTextEntry = YES;
-						textField.keyboardType = UIKeyboardTypeDefault;
+						UIToolbar* toolbar = [[UIToolbar alloc]initWithFrame:CGRectMake(0, 0, 320, 50)];
+        				toolbar.barTintColor = [UIColor colorWithRed:209.0f/255.0f green:212.0f/255.0f blue:217.0f/255.0f alpha:1.0];
+						toolbar.items = [NSArray arrayWithObjects:
+                               [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                               [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                               [[UIBarButtonItem alloc]initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(doneBtn)],nil];
+        				textField.inputAccessoryView = toolbar;
+						if (numeric) {
+							textField.keyboardType = UIKeyboardTypeNumberPad;
+							textField.returnKeyType = UIReturnKeyDone;
+						} else {
+							textField.keyboardType = UIKeyboardTypeDefault;
+							textField.returnKeyType = UIReturnKeyDone;
+						}
 					}];
 					[pwAuth addAction: dismiss1];
 					[pwAuth addAction:login];
@@ -156,6 +210,10 @@ double itemCount = 0;
 	} else {
 			%orig;
 	}
+}
+%new
+-(void)doneBtn {
+	[[UIApplication sharedApplication] sendAction:@selector(resignFirstResponder) to:nil from:nil forEvent:nil];
 }
 %end
 
@@ -182,13 +240,17 @@ double itemCount = 0;
 %end
 
 void resetPassword() {
-	UICKeyChainStore *keychain = [UICKeyChainStore keyChainStoreWithService:@"com.apple.mobileslideshow"];
-	[keychain removeItemForKey:@"hlpassword"];
-	[[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"userDidLogin"];
+	[preferences setBool:NO forKey:@"userDidLogin"];
+	if ([[[NSBundle mainBundle] bundleIdentifier] isEqual:@"com.apple.mobileslideshow"]) {
+		UICKeyChainStore *keychain = [UICKeyChainStore keyChainStoreWithService:@"com.apple.mobileslideshow"];
+		[keychain removeItemForKey:@"hlpassword"];
+		NSLog(@"received, bool:%d", userDidLogin);
+	}
 }
 
 %ctor {
-	preferences = [[HBPreferences alloc] initWithIdentifier:@"com.yan.hiddenlock14prefs"];
+	%init(_ungrouped);
+	preferences = [[HBPreferences alloc] initWithIdentifier:@"com.yan.hiddenlockpreferences"];
 	[preferences registerBool:&enabled default:YES forKey:@"enabled"];
 	if (!enabled) return;
 
@@ -197,6 +259,9 @@ void resetPassword() {
 	[preferences registerBool:&passwordAuthEnabled default:NO forKey:@"passwordAuthEnabled"];
 	[preferences registerBool:&authOnAppStart default:NO forKey:@"authOnAppStart"];
 	[preferences registerBool:&popToEnabled default:YES forKey:@"popToEnabled"];
+	[preferences registerBool:&numeric default:NO forKey:@"numeric"];
+	[preferences registerBool:&userDidLogin default:nil forKey:@"userDidLogin"];
+	[preferences registerBool:&didPresentWC default:nil forKey:@"didPresentWC"];
 
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
 		if (@available(iOS 14, *)) {
@@ -225,5 +290,5 @@ void resetPassword() {
 			}
 		}
 	}
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)resetPassword, (CFStringRef)@"com.yan.hiddenlock14/resetPassword", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)resetPassword, (CFStringRef)@"com.yan.hiddenlockpreferences/resetPassword", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
 }

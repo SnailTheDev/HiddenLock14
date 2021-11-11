@@ -5,6 +5,18 @@
 	<key>items</key>
 	<array>
 		<dict>
+			<key>big</key>
+			<string>56</string>
+			<key>cellClass</key>
+			<string>HBTwitterCell</string>
+			<key>label</key>
+			<string>yan</string>
+			<key>user</key>
+			<string>yandevelop</string>
+			<key>userID</key>
+			<string>1453463714431225860</string>
+		</dict>
+		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
@@ -16,13 +28,13 @@
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
-			<string>com.yan.hiddenlock14prefs</string>
+			<string>com.yan.hiddenlockpreferences</string>
 			<key>key</key>
 			<string>enabled</string>
 			<key>label</key>
 			<string>Enable HiddenLock14</string>
 			<key>PostNotification</key>
-			<string>com.yan.hiddenlock14prefs/ReloadPrefs</string>
+			<string>com.yan.hiddenlockpreferences/ReloadPrefs</string>
 		</dict>
 
 		<dict>
@@ -41,13 +53,13 @@
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
-			<string>com.yan.hiddenlock14prefs</string>
+			<string>com.yan.hiddenlockpreferences</string>
 			<key>key</key>
 			<string>itemCountEnabled</string>
 			<key>label</key>
 			<string>Enable</string>
 			<key>PostNotification</key>
-			<string>com.yan.hiddenlock14prefs/ReloadPrefs</string>
+			<string>com.yan.hiddenlockpreferences/ReloadPrefs</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -55,7 +67,7 @@
 			<key>default</key>
 			<string>0</string>
 			<key>defaults</key>
-			<string>com.yan.hiddenlock14prefs</string>
+			<string>com.yan.hiddenlockpreferences</string>
 			<key>key</key>
 			<string>itemCount</string>
 			<key>label</key>
@@ -65,7 +77,7 @@
 			<key>placeholder</key>
 			<string>0</string>
 			<key>PostNotification</key>
-			<string>com.yan.hiddenlock14prefs/ReloadPrefs</string>
+			<string>com.yan.hiddenlockpreferences/ReloadPrefs</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -83,38 +95,13 @@
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
-			<string>com.yan.hiddenlock14prefs</string>
+			<string>com.yan.hiddenlockpreferences</string>
 			<key>key</key>
 			<string>popToEnabled</string>
 			<key>label</key>
 			<string>Enable</string>
 			<key>PostNotification</key>
-			<string>com.yan.hiddenlock14prefs/ReloadPrefs</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>App Lock</string>
-			<key>footerText</key>
-			<string>Prompt authentication on opening Photos.</string>
-			<key>isStaticText</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.yan.hiddenlock14prefs</string>
-			<key>key</key>
-			<string>authOnAppStart</string>
-			<key>label</key>
-			<string>Enable</string>
-			<key>PostNotification</key>
-			<string>com.yan.hiddenlock14prefs/ReloadPrefs</string>
+			<string>com.yan.hiddenlockpreferences/ReloadPrefs</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -122,9 +109,21 @@
 			<key>label</key>
 			<string>Password</string>
 			<key>footerText</key>
-			<string>Reset the password you've set for HiddenLock14 in case you forgot it.</string>
+			<string>Reset the password you've set for HiddenLock14.</string>
 			<key>isStaticText</key>
 			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>defaults</key>
+			<string>com.yan.hiddenlockpreferences</string>
+			<key>key</key>
+			<string>numeric</string>
+			<key>label</key>
+			<string>Use numeric keyboard</string>
+			<key>PostNotification</key>
+			<string>com.yan.hiddenlockpreferences/ReloadPrefs</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -150,25 +149,11 @@
 			<key>label</key>
 			<string>Donate</string>
 			<key>subtitle</key>
-			<string>?</string>
+			<string>Feel free to donate to me</string>
 			<key>url</key>
-			<string>https://yandevelop.github.io</string>
+			<string>https://www.paypal.com/paypalme/yandevelop</string>
 			<key>iconURL</key>
 			<string>https://cdn.icon-icons.com/icons2/730/PNG/512/paypal_icon-icons.com_62759.png</string>
-			<key>iconCircular</key>
-			<string>YES</string>
-		</dict>
-		<dict>
-			<key>cellClass</key>
-			<string>HBLinkTableCell</string>
-			<key>label</key>
-			<string>Twitter</string>
-			<key>subtitle</key>
-			<string>Follow me on twitter!</string>
-			<key>url</key>
-			<string>https://twitter.com/yandevelop</string>
-			<key>iconURL</key>
-			<string>-</string>
 			<key>iconCircular</key>
 			<string>YES</string>
 		</dict>
@@ -180,9 +165,9 @@
 			<key>subtitle</key>
 			<string>This tweak is open-source on GitHub</string>
 			<key>url</key>
-			<string>https://github.com/yandevelop/Campfire</string>
+			<string>https://github.com/yandevelop/HiddenLock14</string>
 			<key>iconURL</key>
-			<string>-</string>
+			<string>https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png</string>
 			<key>iconCircular</key>
 			<string>YES</string>
 		</dict>
@@ -196,7 +181,7 @@
 			<key>url</key>
 			<string>https://discord.gg/wVG522PcUd</string>
 			<key>iconURL</key>
-			<string>-</string>
+			<string>https://www.pngkit.com/png/detail/816-8165219_discord-logo-png-discord-icon.png</string>
 			<key>iconCircular</key>
 			<string>YES</string>
 		</dict>

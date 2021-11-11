@@ -1,11 +1,9 @@
-TARGET := iphone:clang:latest:7.0
-
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = HiddenLockPreferences
 
 HiddenLockPreferences_FILES = HLPRootListController.m
-HiddenLockPreferences_FRAMEWORKS = UIKit
+HiddenLockPreferences_FRAMEWORKS = UIKit OnBoardingKit
 HiddenLockPreferences_PRIVATE_FRAMEWORKS = Preferences
 HiddenLockPreferences_INSTALL_PATH = /Library/PreferenceBundles
 HiddenLockPreferences_CFLAGS = -fobjc-arc
