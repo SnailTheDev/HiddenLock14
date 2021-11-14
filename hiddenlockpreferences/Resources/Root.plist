@@ -43,7 +43,7 @@
 			<key>label</key>
 			<string>Item Count</string>
 			<key>footerText</key>
-			<string>If nothing is set, 0 is displayed by default.</string>
+			<string>If no number is set, 0 is set by default.</string>
 			<key>isStaticText</key>
 			<true/>
 		</dict>

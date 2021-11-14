@@ -3,7 +3,8 @@ INSTALL_TARGET_PROCESSES = MobileSlideShow
 ARCHS = arm64 arm64e
 THEOS_DEVICE_IP = localhost
 THEOS_DEVICE_PORT = 2222
-DEBUG = 1
+VERSION = 1.1
+FINALPACKAGE = 1
 
 include $(THEOS)/makefiles/common.mk
 

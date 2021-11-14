@@ -2,7 +2,6 @@
 
 // Thanks to CydaiDEV, Hearse
 
-
 HBPreferences *preferences;
 
 LAPolicy policy = LAPolicyDeviceOwnerAuthentication;
@@ -14,40 +13,10 @@ BOOL passwordAuthEnabled;
 BOOL isAuthenticated;
 BOOL authOnAppStart;
 BOOL popToEnabled;
-static BOOL accessed = nil;
-static BOOL numeric;
-static BOOL userDidLogin;
-static BOOL didPresentWC;
-
+BOOL accessed = nil;
+BOOL numeric;
+BOOL userDidLogin;
 double itemCount = 0;
-
-/* iPad
-%group iPad
-%hook PUSidebarViewController
--(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-	NSLog(@"Tapped!");
-	if (indexPath.row == 9) {
-		NSLog(@"Tapped indexPath:%ld", indexPath.row);
-		LAContext *context = [[LAContext alloc] init];
-		NSError *authError = nil;
-		if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&authError]) {
-			[context evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:NSLocalizedString(@"Use your passcode to view and manage hidden album.", nil) reply:^(BOOL success, NSError *error) {
-				dispatch_async(dispatch_get_main_queue(), ^{
-				if (success) {
-					%orig;
-				} else {
-					
-				}
-				});
-			}];
-		}
-	} else {
-		%orig;
-	}
-}
-%end
-%end
-*/
 
 %group HiddenLock14
 %hook PXNavigationListItem
@@ -62,8 +31,6 @@ double itemCount = 0;
 
 %hook PXNavigationListGadget
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	NSLog(@"Value for userDidLogin: %d", userDidLogin);
-	//NSLog(@"Section: %ld, Row:%ld, Item:%ld, Desc:%@", indexPath.section, indexPath.row, indexPath.item, indexPath.description);
 	if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
 		NSString *cellLabel = [[[tableView cellForRowAtIndexPath: indexPath] textLabel] text];
 		if (indexPath.row == 1 && [cellLabel isEqualToString:@"Hidden"])  {
@@ -77,35 +44,25 @@ double itemCount = 0;
 							accessed = YES;
 						    %orig;
 					    } else {
-							dispatch_async(dispatch_get_main_queue(), ^{
-								switch(error.code) {
-									case LAErrorUserFallback:
-										NSLog(@"UserFallBack!");
-									break;
-									
-									case LAErrorPasscodeNotSet:
-										NSLog(@"PasscodeNotSet");
-									break;
-
-									case LAErrorAuthenticationFailed:
-										NSLog(@"Authentication failed!");
-									break;
-									
-									case LAErrorUserCancel:
-										NSLog(@"User did cancel!");
-									break;
-								}
-							});
-
 						    [tableView deselectRowAtIndexPath:indexPath animated:YES];
 					    }
 				    });
 			    }];
 		    } else {
+			UIColor *btColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traitCollection) {
+            	BOOL darkMode = traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
+            	BOOL lightMode = traitCollection.userInterfaceStyle == UIUserInterfaceStyleLight;
+            		if (darkMode) {
+                		return [UIColor colorWithRed:31.0f/255.0f green:31.0f/255.0f blue:31.0f/255.0f alpha:1.0];
+            		} else if (lightMode) {
+                		return [UIColor colorWithRed:209.0f/255.0f green:212.0f/255.0f blue:217.0f/255.0f alpha:1.0];
+           			}
+            		return [UIColor blackColor];
+        	}];
 			UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
 			UICKeyChainStore *keychain = [UICKeyChainStore keyChainStoreWithService:@"com.apple.mobileslideshow"];
-				if(![preferences objectForKey:@"userDidLogin"] || ![keychain stringForKey:@"hlpassword"]) {
-					UIAlertController *authFailed = [UIAlertController alertControllerWithTitle:@"Authentication failed" message:@"You have not set a proper Authentication method.\n Please proceed setting a password." preferredStyle:UIAlertControllerStyleAlert];
+				if(![preferences boolForKey:@"userDidLogin"] || ![keychain stringForKey:@"hlpassword"]) {
+					UIAlertController *authFailed = [UIAlertController alertControllerWithTitle:@"No authentication" message:@"You have not set a proper Authentication method.\n Please proceed setting a password." preferredStyle:UIAlertControllerStyleAlert];
 					UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {}];
 					UIAlertAction *authenticateAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
 						NSString *password = ((UITextField *)authFailed.textFields[0]).text;
@@ -119,7 +76,6 @@ double itemCount = 0;
 							[rootVC presentViewController:passwordLength animated:YES completion:nil];
 						} else {
 							if ([password isEqualToString:passwordDouble]) {
-								;
                             	[keychain setString:password forKey:@"hlpassword"];
 								[preferences setBool:YES forKey:@"userDidLogin"];
 								%orig;
@@ -137,6 +93,13 @@ double itemCount = 0;
 						textField.placeholder = @"Enter a password";
 						textField.secureTextEntry = YES;
 						if (numeric) {
+							UIToolbar* toolbar = [[UIToolbar alloc]initWithFrame:CGRectMake(0, 0, 320, 50)];
+   							toolbar.barTintColor = btColor;
+							toolbar.items = [NSArray arrayWithObjects:
+                							[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                    						[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                    						[[UIBarButtonItem alloc]initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(doneBtn)],nil];
+    						textField.inputAccessoryView = toolbar;
 							textField.keyboardType = UIKeyboardTypeNumberPad;
 						} else {
 							textField.keyboardType = UIKeyboardTypeDefault;
@@ -146,6 +109,13 @@ double itemCount = 0;
 						textField1.placeholder = @"Confirm your password";
 						textField1.secureTextEntry = YES;
 						if (numeric) {
+							UIToolbar* toolbar = [[UIToolbar alloc]initWithFrame:CGRectMake(0, 0, 320, 50)];
+							toolbar.barTintColor = btColor;
+							toolbar.items = [NSArray arrayWithObjects:
+                							[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                    						[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                    						[[UIBarButtonItem alloc]initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(doneBtn)],nil];
+    						textField1.inputAccessoryView = toolbar;
 							textField1.keyboardType = UIKeyboardTypeNumberPad;
 						} else {
 							textField1.keyboardType = UIKeyboardTypeDefault;
@@ -181,16 +151,16 @@ double itemCount = 0;
 					[pwAuth addTextFieldWithConfigurationHandler:^(UITextField *textField) {
 						textField.placeholder = @"Password";
 						textField.secureTextEntry = YES;
-						UIToolbar* toolbar = [[UIToolbar alloc]initWithFrame:CGRectMake(0, 0, 320, 50)];
-        				toolbar.barTintColor = [UIColor colorWithRed:209.0f/255.0f green:212.0f/255.0f blue:217.0f/255.0f alpha:1.0];
-						toolbar.items = [NSArray arrayWithObjects:
-                               [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                               [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                               [[UIBarButtonItem alloc]initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(doneBtn)],nil];
-        				textField.inputAccessoryView = toolbar;
 						if (numeric) {
+							UIToolbar* toolbar = [[UIToolbar alloc]initWithFrame:CGRectMake(0, 0, 320, 50)];
+							toolbar.barTintColor = btColor;
+							toolbar.items = [NSArray arrayWithObjects:
+                							[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                    						[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                    						[[UIBarButtonItem alloc]initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(doneBtn)],nil];
+    						textField.inputAccessoryView = toolbar;
 							textField.keyboardType = UIKeyboardTypeNumberPad;
-							textField.returnKeyType = UIReturnKeyDone;
+							textField.keyboardType = UIKeyboardTypeNumberPad;
 						} else {
 							textField.keyboardType = UIKeyboardTypeDefault;
 							textField.returnKeyType = UIReturnKeyDone;
@@ -200,15 +170,13 @@ double itemCount = 0;
 					[pwAuth addAction:login];
 					[rootVC presentViewController:pwAuth animated: YES completion:nil];
 					[tableView deselectRowAtIndexPath:indexPath animated:YES];
-					%orig;
+					//%orig;
 				}
 		    }
 	    } else {
 			[tableView deselectRowAtIndexPath:indexPath animated:YES];
 		    %orig;
-	    }
-	} else {
-			%orig;
+		}
 	}
 }
 %new
@@ -261,7 +229,7 @@ void resetPassword() {
 	[preferences registerBool:&popToEnabled default:YES forKey:@"popToEnabled"];
 	[preferences registerBool:&numeric default:NO forKey:@"numeric"];
 	[preferences registerBool:&userDidLogin default:nil forKey:@"userDidLogin"];
-	[preferences registerBool:&didPresentWC default:nil forKey:@"didPresentWC"];
+	//[preferences registerBool:&didPresentWC default:nil forKey:@"didPresentWC"];
 
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
 		if (@available(iOS 14, *)) {

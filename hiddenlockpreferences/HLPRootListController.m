@@ -70,7 +70,7 @@ OBWelcomeController *welcomeController;
 - (void)viewDidLoad {
 	[super viewDidLoad];
 
-	if (![[self preferences] objectForKey:@"didPresentWC"]) {
+	if (![[self preferences] objectForKey:@"didPresentWVC"]) {
 		[self setupWelcomeController];
 	}
 }
@@ -97,7 +97,7 @@ OBWelcomeController *welcomeController;
 }
 
 - (void)dismissWelcomeController {
-	[[self preferences] setBool:YES forKey:@"didPresentWC"];
+	[[self preferences] setBool:YES forKey:@"didPresentWVC"];
 	[welcomeController dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -109,8 +109,6 @@ OBWelcomeController *welcomeController;
 
 	return _specifiers;
 }
-//https://stackoverflow.com/questions/5833216/number-pad-keyboard-not-show-return-key-in-iphone
-// https://stackoverflow.com/questions/20192303/how-to-add-a-done-button-to-numpad-keyboard-in-ios
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGFloat offsetY = scrollView.contentOffset.y;
@@ -154,6 +152,7 @@ OBWelcomeController *welcomeController;
 	UIAlertController *rstPwAlert = [UIAlertController alertControllerWithTitle:@"Reset password" message:@"Are you sure you want to reset your password?" preferredStyle:UIAlertControllerStyleAlert];
 	UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style: UIAlertActionStyleCancel handler:^(UIAlertAction * action) {}];
 	UIAlertAction *rstPwAction = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+			[[self preferences] setBool:NO forKey:@"userDidLogin"];
 			CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)@"com.yan.hiddenlockpreferences/resetPassword", nil, nil, true);
 	}];
 	[rstPwAlert addAction:rstPwAction];
