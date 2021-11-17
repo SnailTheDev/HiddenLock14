@@ -19,7 +19,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	}
 	if (getuid() != 0) {
     	printf("The lighter broke, please refill gas!");
-    	return 1;
+    	return 0;
 	}
 }
 

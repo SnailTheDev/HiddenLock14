@@ -2,7 +2,7 @@ Package: com.yan.hiddenlock14
 Name: HiddenLock14
 Version: 1.1
 Architecture: iphoneos-arm
-Description: Locks the hidden photos section, just as how it should be.
+Description: Adds an authentication layer to the hidden album, just as how it should be.
 Maintainer: yan
 Author: yan
 Section: Tweaks

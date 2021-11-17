@@ -14,7 +14,7 @@ OBWelcomeController *welcomeController;
 
 		self.preferences = [[HBPreferences alloc] initWithIdentifier:@"com.yan.hiddenlockpreferences"];
 
-		self.applyButton = [[UIBarButtonItem alloc] initWithTitle:@"Apply" style: UIBarButtonItemStylePlain target: self action: @selector(applySettings)];
+		self.applyButton = [[UIBarButtonItem alloc] initWithTitle:@"Apply" style: UIBarButtonItemStylePlain target:self action: @selector(changesApplied)];
 		self.applyButton.tintColor = [UIColor whiteColor];
 		self.navigationItem.rightBarButtonItem= self.applyButton;
 		self.navigationItem.titleView = [UIView new];
@@ -76,23 +76,24 @@ OBWelcomeController *welcomeController;
 }
 
 - (void)setupWelcomeController {
-	welcomeController = [[OBWelcomeController alloc] initWithTitle:@"HiddenLock14" detailText:@"Add Face ID authentication to hidden album in Photos." icon:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/icon.png"]];
+	welcomeController = [[OBWelcomeController alloc] initWithTitle:@"Welcome to HiddenLock14" detailText:@"Add biometric authentication to hidden album in Photos." icon:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/welcome/icon.png"]];
 
-	[welcomeController addBulletedListItemWithTitle:@"FaceID" description:@"Lock the hidden section with an additional layer of security" image:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/face-id.png"]];
-	[welcomeController addBulletedListItemWithTitle:@"Item Count" description:@"Set the item count to any number you want!" image:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/icon@2x.png"]];
-	[welcomeController.buttonTray addCaptionText:@"yandevelop"];
+	[welcomeController addBulletedListItemWithTitle:@"Authentication" description:@"Lock the hidden album with an additional layer of security." image:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/welcome/faceid.png"]];
+	[welcomeController addBulletedListItemWithTitle:@"Item Count" description:@"Set the photos item count to any number you want!" image:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/HiddenLockPreferences.bundle/welcome/photo_on_rectangle.png"]];
+	[welcomeController.buttonTray addCaptionText:@"developed with ❤️ by yan"];
 
 	OBBoldTrayButton* continueButton = [OBBoldTrayButton buttonWithType:1];
     [continueButton addTarget:self action:@selector(dismissWelcomeController) forControlEvents:UIControlEventTouchUpInside];
     [continueButton setTitle:@"Experience it yourself!" forState:UIControlStateNormal];
     [continueButton setClipsToBounds:YES];
     [continueButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [continueButton.layer setCornerRadius:10];
+    [continueButton.layer setCornerRadius:15];
 	continueButton.tintColor = [UIColor colorWithRed:0.34 green:0.83 blue:0.96 alpha:1.0];
     [welcomeController.buttonTray addButton:continueButton];
 
     welcomeController.modalPresentationStyle = UIModalPresentationPageSheet;
-    welcomeController.view.tintColor = [UIColor blackColor];//[UIColor colorWithRed:0.60 green:0.75 blue:0.85 alpha:1.0];
+	welcomeController.modalInPresentation = YES;
+    welcomeController.view.tintColor = [UIColor blackColor];
     [self presentViewController:welcomeController animated:YES completion:nil];
 }
 
@@ -132,8 +133,18 @@ OBWelcomeController *welcomeController;
 	}
 }
 
+-(void)changesApplied {
+	applySettings();
+	UIAlertController *cAController = [UIAlertController alertControllerWithTitle:@"HiddenLock14" message:@"Changes applied successfully!" preferredStyle:UIAlertControllerStyleAlert];
+	[self presentViewController:cAController animated:YES completion:nil];
 
--(void)applySettings {
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [cAController dismissViewControllerAnimated:YES completion:^{
+        }];
+	});
+}
+
+static void applySettings() {
 	NSLog(@"Applying changes...");
 	pid_t pid;
     int status;
@@ -160,4 +171,3 @@ OBWelcomeController *welcomeController;
     [self presentViewController:rstPwAlert animated:YES completion:nil];
 }
 @end
-

@@ -4,6 +4,13 @@
 #import <Cephei/HBRespringController.h>
 #import <Cephei/HBPreferences.h>
 
+#import <objc/runtime.h>
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import <CoreFoundation/CFNotificationCenter.h>
+#import <dlfcn.h>
+
 
 @interface HLPRootListController : HBRootListController
 @property(nonatomic, retain) UIBarButtonItem *applyButton;
@@ -13,6 +20,7 @@
 @property(nonatomic, retain) UIImageView *iconView;
 @property(nonatomic, retain) UILabel *titleLabel;
 - (void)resetPassword:(id)sender;
+- (void)changesApplied;
 //- (void)applySettings;
 @end
 

@@ -9,9 +9,7 @@ NSString *reason = @"Use your passcode to view and manage hidden album.";
 
 BOOL enabled;
 BOOL itemCountEnabled;
-BOOL passwordAuthEnabled;
 BOOL isAuthenticated;
-BOOL authOnAppStart;
 BOOL popToEnabled;
 BOOL accessed = nil;
 BOOL numeric;
@@ -33,7 +31,7 @@ double itemCount = 0;
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
 		NSString *cellLabel = [[[tableView cellForRowAtIndexPath: indexPath] textLabel] text];
-		if (indexPath.row == 1 && [cellLabel isEqualToString:@"Hidden"])  {
+		if ([cellLabel isEqualToString:@"Hidden"])  {
 			NSLog(@"%@", cellLabel);
 		    LAContext *context = [[LAContext alloc] init];
 		    NSError *authError = nil;
@@ -177,6 +175,8 @@ double itemCount = 0;
 			[tableView deselectRowAtIndexPath:indexPath animated:YES];
 		    %orig;
 		}
+	} else {
+		%orig;
 	}
 }
 %new
@@ -186,7 +186,7 @@ double itemCount = 0;
 %end
 
 %hook PUAlbumsGadgetViewController
-- (void)_applicationWillEnterForeground: (id)arg1 {
+- (void)_applicationDidEnterBackground: (id)arg1 {
 	if (accessed && popToEnabled) {
 		[self.navigationController popToRootViewControllerAnimated:YES];
 		accessed = NO;
@@ -208,28 +208,22 @@ double itemCount = 0;
 %end
 
 void resetPassword() {
-	[preferences setBool:NO forKey:@"userDidLogin"];
-	if ([[[NSBundle mainBundle] bundleIdentifier] isEqual:@"com.apple.mobileslideshow"]) {
+		[preferences setBool:NO forKey:@"userDidLogin"];
 		UICKeyChainStore *keychain = [UICKeyChainStore keyChainStoreWithService:@"com.apple.mobileslideshow"];
 		[keychain removeItemForKey:@"hlpassword"];
-		NSLog(@"received, bool:%d", userDidLogin);
-	}
+		NSLog(@"received bool:%d", userDidLogin);
 }
 
 %ctor {
-	%init(_ungrouped);
 	preferences = [[HBPreferences alloc] initWithIdentifier:@"com.yan.hiddenlockpreferences"];
 	[preferences registerBool:&enabled default:YES forKey:@"enabled"];
 	if (!enabled) return;
 
 	[preferences registerDouble:&itemCount default:0 forKey:@"itemCount"];
 	[preferences registerBool:&itemCountEnabled default:YES forKey:@"itemCountEnabled"];
-	[preferences registerBool:&passwordAuthEnabled default:NO forKey:@"passwordAuthEnabled"];
-	[preferences registerBool:&authOnAppStart default:NO forKey:@"authOnAppStart"];
 	[preferences registerBool:&popToEnabled default:YES forKey:@"popToEnabled"];
 	[preferences registerBool:&numeric default:NO forKey:@"numeric"];
 	[preferences registerBool:&userDidLogin default:nil forKey:@"userDidLogin"];
-	//[preferences registerBool:&didPresentWC default:nil forKey:@"didPresentWC"];
 
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
 		if (@available(iOS 14, *)) {
@@ -242,9 +236,8 @@ void resetPassword() {
                 waitpid(pid, &status, WEXITED);
 			}
 		}	
-    } else {
+    }
 
-	}
 	if ([[[NSBundle mainBundle] bundleIdentifier] isEqual:@"com.apple.mobileslideshow"]) {
 		%init(HiddenLock14);
 		%init(NSB);
@@ -253,8 +246,6 @@ void resetPassword() {
 			if (![[[defaults dictionaryRepresentation] allKeys] containsObject:@"HiddenAlbumVisible"]) {
 				[defaults setBool:YES forKey:@"HiddenAlbumVisible"];
 				[defaults synchronize];
-			} else {
-				NSLog(@"Key already set!");
 			}
 		}
 	}
