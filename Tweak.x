@@ -6,6 +6,7 @@ HBPreferences *preferences;
 
 LAPolicy policy = LAPolicyDeviceOwnerAuthentication;
 NSString *reason = @"Use your passcode to view and manage hidden album.";
+NSString *description = @"Use FaceID to view and manage hidden photos.";
 
 BOOL enabled;
 BOOL itemCountEnabled;
@@ -15,6 +16,24 @@ BOOL accessed = nil;
 BOOL numeric;
 BOOL userDidLogin;
 double itemCount = 0;
+
+%group NSB
+%hook NSBundle
+- (NSDictionary *)infoDictionary {
+    NSDictionary *plist = %orig;
+	NSMutableDictionary *mPlist = [plist mutableCopy] ?: [NSMutableDictionary dictionary];
+    [mPlist setObject:description forKey:@"NSFaceIDUsageDescription"];
+	return mPlist;
+}
+- (NSDictionary *)localizedInfoDictionary {
+	NSDictionary *plist = %orig;
+	NSMutableDictionary *mPlist = [plist mutableCopy] ?: [NSMutableDictionary dictionary];
+    [mPlist setObject:description forKey:@"NSFaceIDUsageDescription"];
+	return mPlist;
+}
+%end
+%end
+
 
 %group HiddenLock14
 %hook PXNavigationListItem
@@ -29,10 +48,8 @@ double itemCount = 0;
 
 %hook PXNavigationListGadget
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
-		NSString *cellLabel = [[[tableView cellForRowAtIndexPath: indexPath] textLabel] text];
-		if ([cellLabel isEqualToString:@"Hidden"])  {
-			NSLog(@"%@", cellLabel);
+ 		if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
+		if (indexPath.row == 1 && [[[tableView cellForRowAtIndexPath: indexPath] imageView] image] == [UIImage systemImageNamed:@"eye.slash"])  {
 		    LAContext *context = [[LAContext alloc] init];
 		    NSError *authError = nil;
 		    if ([context canEvaluatePolicy:policy error:&authError]) {
@@ -192,17 +209,6 @@ double itemCount = 0;
 		accessed = NO;
 	}
 	%orig;
-}
-%end
-%end
-
-%group NSB
-%hook NSBundle
-- (NSDictionary *)infoDictionary {
-    NSDictionary *plist = %orig;
-	NSMutableDictionary *mPlist = [plist mutableCopy] ?: [NSMutableDictionary dictionary];
-    [mPlist setValue:@"Use FaceID to view and manage hidden photos." forKey:@"NSFaceIDUsageDescription"];
-    return mPlist;
 }
 %end
 %end
