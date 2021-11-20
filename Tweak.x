@@ -43,7 +43,11 @@ double itemCount = 0;
 %hook PXNavigationListGadget
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
  		if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
-		if (indexPath.row == 1 && [[[tableView cellForRowAtIndexPath: indexPath] imageView] image] == [UIImage systemImageNamed:@"eye.slash"])  {
+		NSData *cellImgData = UIImagePNGRepresentation([[[tableView cellForRowAtIndexPath: indexPath] imageView] image]);
+		NSData *eyeData = UIImagePNGRepresentation([UIImage systemImageNamed:@"eye.slash"]);
+		BOOL isCompare =  [cellImgData isEqualToData:eyeData];
+		//[[[tableView cellForRowAtIndexPath: indexPath] imageView] image] == [UIImage systemImageNamed:@"eye.slash"]
+		if (indexPath.row == 1 && isCompare)  {
 		    LAContext *context = [[LAContext alloc] init];
 		    NSError *authError = nil;
 		    if ([context canEvaluatePolicy:policy error:&authError]) {
