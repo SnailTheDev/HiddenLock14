@@ -3,13 +3,7 @@
 #import <CepheiPrefs/HBAppearanceSettings.h>
 #import <Cephei/HBRespringController.h>
 #import <Cephei/HBPreferences.h>
-
-#import <objc/runtime.h>
-#import <UIKit/UIKit.h>
-#import <Foundation/Foundation.h>
-#import <CoreFoundation/CoreFoundation.h>
-#import <CoreFoundation/CFNotificationCenter.h>
-#import <dlfcn.h>
+#include <spawn.h>
 
 
 @interface HLPRootListController : HBRootListController

@@ -25,12 +25,6 @@ double itemCount = 0;
     [mPlist setObject:description forKey:@"NSFaceIDUsageDescription"];
 	return mPlist;
 }
-- (NSDictionary *)localizedInfoDictionary {
-	NSDictionary *plist = %orig;
-	NSMutableDictionary *mPlist = [plist mutableCopy] ?: [NSMutableDictionary dictionary];
-    [mPlist setObject:description forKey:@"NSFaceIDUsageDescription"];
-	return mPlist;
-}
 %end
 %end
 
@@ -209,6 +203,32 @@ double itemCount = 0;
 		accessed = NO;
 	}
 	%orig;
+}
+
+- (void)viewDidLoad {
+	%orig;
+	NSDictionary *nsDict = [[NSBundle mainBundle] infoDictionary];
+	NSMutableDictionary *infoPlist = [NSMutableDictionary dictionaryWithContentsOfFile:@"/Applications/MobileSlideShow.app/Info.plist"];
+	if (!nsDict[@"NSFaceIDUsageDescription"]) {
+		UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
+		UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"The key necessary for HiddenLock14 to work is not set. Please set it now through preferences." preferredStyle:UIAlertControllerStyleAlert];
+		UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:@"Go to prefs" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+			[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"App-prefs:HiddenLock14"] options:@{} completionHandler:nil];
+		}];
+		[keyController addAction:settingsAction];
+		[rootVC presentViewController:keyController animated:YES completion:nil];
+	}
+	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
+		if (infoPlist[@"NSFaceIDUsageDescription"] == nil) {
+			UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
+			UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"The key necessary for HiddenLock14 to work is not set. Please set it now through preferences" preferredStyle:UIAlertControllerStyleAlert];
+			UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:@"Go to prefs" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+				[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"App-prefs:HiddenLock14"] options:@{} completionHandler:nil];
+			}];
+			[keyController addAction:settingsAction];
+			[rootVC presentViewController:keyController animated:YES completion:nil];
+		}
+	}
 }
 %end
 %end

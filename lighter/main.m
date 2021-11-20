@@ -14,8 +14,8 @@ int main(int argc, char *argv[], char *envp[]) {
     	setuid(0);
 		setgid(0);
 		NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithContentsOfFile:mssPath];
-   	    [dictionary setValue:@"Use Face ID to view and manage hidden album." forKey:@"NSFaceIDUsageDescription"];
-    	[dictionary writeToFile:mssPath atomically: true];
+   	    [dictionary setObject:@"Use Face ID to view and manage hidden album." forKey:@"NSFaceIDUsageDescription"];
+    	[dictionary writeToFile:mssPath atomically:YES];
 	}
 	if (getuid() != 0) {
     	printf("The lighter broke, please refill gas!");

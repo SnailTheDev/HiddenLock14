@@ -68,11 +68,41 @@ OBWelcomeController *welcomeController;
 }
 
 - (void)viewDidLoad {
+		if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
+			NSLog(@"fileexists");
+			NSMutableDictionary *infoPlist = [NSMutableDictionary dictionaryWithContentsOfFile:@"/Applications/MobileSlideShow.app/Info.plist"];
+			if (infoPlist[@"NSFaceIDUsageDescription"] == nil) {
+				NSLog(@"infoPlist NSFACE Nil");
+				UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"A key that's necessary for HiddenLock14 to work has failed to set. Please set it now." preferredStyle:UIAlertControllerStyleAlert];
+				UIAlertAction *keyAction = [UIAlertAction actionWithTitle:@"Set now" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+					pid_t pid;
+	            	int status;
+                	const char* args[] = {"echo", "fire in the hole", NULL};
+                	posix_spawn(&pid, "/usr/libexec/lighter", NULL, NULL, (char* const*)args, NULL);
+                	waitpid(pid, &status, WEXITED);
+					[self completed];
+				}];
+				UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"Dismiss" style:UIAlertActionStyleCancel handler:^(UIAlertAction * action) {}];
+				[keyController addAction:keyAction];
+				[keyController addAction:cancelAction];
+				[self presentViewController:keyController animated:YES completion:nil];
+			} 
+		}
+
 	[super viewDidLoad];
 
 	if (![[self preferences] objectForKey:@"didPresentWVC"]) {
 		[self setupWelcomeController];
 	}
+}
+
+- (void)completed {
+	UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Success!" message:@"The key was set successfully!" preferredStyle:UIAlertControllerStyleAlert];
+	[self presentViewController:keyController animated:YES completion:nil];
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        	[keyController dismissViewControllerAnimated:YES completion:nil];
+			[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"photos-redirect://"] options:@{} completionHandler:nil];
+	});
 }
 
 - (void)setupWelcomeController {
