@@ -1,7 +1,7 @@
 TARGET := iphone:clang:14.4:13.0
 INSTALL_TARGET_PROCESSES = MobileSlideShow
 ARCHS = arm64 arm64e
-PACKAGE_VERSION = 1.1.2
+PACKAGE_VERSION = 1.1.3
 FINALPACKAGE = 1
 
 include $(THEOS)/makefiles/common.mk

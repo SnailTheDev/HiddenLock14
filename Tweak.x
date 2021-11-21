@@ -42,7 +42,7 @@ double itemCount = 0;
 
 %hook PXNavigationListGadget
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
- 		if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
+ 		//if ([[[NSUserDefaults alloc] init] boolForKey:@"HiddenAlbumVisible"] == 1) {
 		NSData *cellImgData = UIImagePNGRepresentation([[[tableView cellForRowAtIndexPath: indexPath] imageView] image]);
 		NSData *eyeData = UIImagePNGRepresentation([UIImage systemImageNamed:@"eye.slash"]);
 		BOOL isCompare =  [cellImgData isEqualToData:eyeData];
@@ -190,9 +190,9 @@ double itemCount = 0;
 			[tableView deselectRowAtIndexPath:indexPath animated:YES];
 		    %orig;
 		}
-	} else {
-		%orig;
-	}
+	//} else {
+	//	%orig;
+	//}
 }
 %new
 -(void)doneBtn {
@@ -211,27 +211,35 @@ double itemCount = 0;
 
 - (void)viewDidLoad {
 	%orig;
-	NSDictionary *nsDict = [[NSBundle mainBundle] infoDictionary];
-	NSMutableDictionary *infoPlist = [NSMutableDictionary dictionaryWithContentsOfFile:@"/Applications/MobileSlideShow.app/Info.plist"];
-	if (!nsDict[@"NSFaceIDUsageDescription"]) {
-		UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
-		UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"The key necessary for HiddenLock14 to work is not set. Please set it now through preferences." preferredStyle:UIAlertControllerStyleAlert];
-		UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:@"Go to prefs" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-			[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"App-prefs:HiddenLock14"] options:@{} completionHandler:nil];
-		}];
-		[keyController addAction:settingsAction];
-		[rootVC presentViewController:keyController animated:YES completion:nil];
-	}
-	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
-		if (infoPlist[@"NSFaceIDUsageDescription"] == nil) {
+	LAContext *sContext = [[LAContext alloc] init];
+	NSError *authError = nil;
+	if ([sContext canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&authError] && sContext.biometryType == LABiometryTypeFaceID) {
+		NSDictionary *nsDict = [[NSBundle mainBundle] infoDictionary];
+		NSMutableDictionary *infoPlist = [NSMutableDictionary dictionaryWithContentsOfFile:@"/Applications/MobileSlideShow.app/Info.plist"];
+		if (!nsDict[@"NSFaceIDUsageDescription"]) {
 			UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
-			UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"The key necessary for HiddenLock14 to work is not set. Please set it now through preferences" preferredStyle:UIAlertControllerStyleAlert];
+			UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"The key necessary for HiddenLock14 to work on FaceID devices is not set. Please set it now through preferences." preferredStyle:UIAlertControllerStyleAlert];
 			UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:@"Go to prefs" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
 				[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"App-prefs:HiddenLock14"] options:@{} completionHandler:nil];
 			}];
 			[keyController addAction:settingsAction];
 			[rootVC presentViewController:keyController animated:YES completion:nil];
+	}
+		if (@available(iOS 14, *)) {
+			if ([[NSFileManager defaultManager] fileExistsAtPath:@"/.installed_unc0ver"] || [[NSFileManager defaultManager] fileExistsAtPath:@"/.bootstrapped"]) {
+				if (infoPlist[@"NSFaceIDUsageDescription"] == nil) {
+					UIViewController *rootVC = [[[[UIApplication sharedApplication] windows] firstObject] rootViewController];
+					UIAlertController *keyController = [UIAlertController alertControllerWithTitle:@"Key not set" message:@"The key necessary for HiddenLock14 to work on FaceID devices is not set. Please set it now through preferences." preferredStyle:UIAlertControllerStyleAlert];
+					UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:@"Open preferences" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+						[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"App-prefs:HiddenLock14"] options:@{} completionHandler:nil];
+					}];
+					[keyController addAction:settingsAction];
+					[rootVC presentViewController:keyController animated:YES completion:nil];
+				}
+			}
 		}
+	} else {
+		%orig;
 	}
 }
 %end
