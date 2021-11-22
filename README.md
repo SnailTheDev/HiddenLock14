@@ -1,5 +1,5 @@
 # HiddenLock14
-Add Face ID authentication to the hidden section
+Add biometric Authentication to the hidden section
 
 ## Installation
 1. Add https://yandevelop.github.io to your package manager.
